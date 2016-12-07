@@ -28,10 +28,10 @@ class TweetNvim(object):
             content += line + '\n'
 
         twitter = OAuth1Session(
-                    self.keys[0],
-                    self.keys[1],
-                    self.keys[2],
-                    self.keys[3]
+                    self.keys['CONSUMER'],
+                    self.keys['CONSUMER_SECRET'],
+                    self.keys['ACCESS_TOKEN'],
+                    self.keys['ACCESS_TOKEN_SECRET']
                 )
 
         params = {'status': content}
