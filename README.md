@@ -17,6 +17,14 @@ Plug 'lycoris0731/tweet.nvim', { 'do': 'make' }
 ```
 
 ## Usage
+You have to set some environment variables.
+``` sh
+TWEET_NVIM_CONSUMER=''
+TWEET_NVIM_CONSUMER_SECRET=''
+TWEET_NVIM_ACCESS_TOKEN=''
+TWEET_NVIM_ACCESS_TOKEN_PRIVATE=''
+```
+
 ``` 
 : Tweet [line...]
 ```
