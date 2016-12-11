@@ -2,8 +2,9 @@
 
 import os
 
-from requests_oauthlib import OAuth1Session
 import neovim
+
+from .api import Api
 
 
 @neovim.plugin
@@ -23,13 +24,8 @@ class TweetNvim(object):
             else:
                 keys[key] = os.getenv('TWEET_NVIM_{}'.format(key))
 
-        self.twitter = OAuth1Session(
-                    keys['CONSUMER'],
-                    keys['CONSUMER_SECRET'],
-                    keys['ACCESS_TOKEN'],
-                    keys['ACCESS_TOKEN_SECRET'])
-
         self.nvim = nvim
+        self.api = Api(keys)
 
     def echo(self, message):
         self.nvim.command("echo '[Tweet.nvim] {}'".format(message))
@@ -39,15 +35,12 @@ class TweetNvim(object):
         if len(lines) == 0:
             self.echo('Usage: Tweet [line...]')
 
-        url = 'https://api.twitter.com/1.1/statuses/update.json'
-
         content = ''
         for line in lines:
             content += line + '\n'
 
-        params = {'status': content}
+        self.api.tweet(content)
 
-        r = self.twitter.post(url, params=params)
         self.echo('Tweeted')
 
     @neovim.command('TwitterTimeline')
