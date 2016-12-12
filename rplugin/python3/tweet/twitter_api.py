@@ -17,6 +17,7 @@ class TwitterAPI:
                 keys['ACCESS_TOKEN'],
                 keys['ACCESS_TOKEN_SECRET'])
 
+        # API制限掛かる可能性
         url = self._api_base + 'friends/ids.json' + '?screen_name=ktr_0731'
         r = self.twitter.get(url)
 
@@ -35,6 +36,7 @@ class TwitterAPI:
         r = self.twitter.post(url, params=params, stream=True)
 
         for line in r.iter_lines():
+            writer("Waiting...")
             if stop_event.is_set():
                 break
 
@@ -47,4 +49,5 @@ class TwitterAPI:
                     continue
 
                 writer("{name}: {tweet}\n\n----------\n".format(name=t['user']['name'], tweet=t['text']))
-                # return "{name}: {tweet}\n\n----------\n".format(name=t['user']['name'], tweet=t['text'])
+        writer("end")
+            # TODO: 一度しか呼べない…

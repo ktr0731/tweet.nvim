@@ -2,6 +2,7 @@
 
 import os
 import threading
+import queue
 
 import neovim
 
@@ -30,13 +31,15 @@ class TweetNvim(object):
 
         # ストリームを開いているウインドウ
         self.streams = {}
+        self.queues = {}
 
     def echo(self, message):
         self.nvim.command("echo '[Tweet.nvim] {}'".format(message))
 
     def prependTweet(self, tweet):
+        self.nvim.command("echo '[Tweet.nvim] {}'".format(tweet))
         self.nvim.command("setlocal modifiable")
-        self.nvim.current.buffer.append([tweet])
+        self.nvim.current.buffer.append(tweet, 0)
         self.nvim.command("setlocal nomodifiable")
 
     @neovim.command('Tweet', nargs='*', sync=True)
@@ -52,27 +55,30 @@ class TweetNvim(object):
 
         self.echo('Tweeted')
 
-    @neovim.command('TwitterTimeline')
-    def timeline(self):
+    @neovim.command('Timeline')
+    def create_stream(self):
         self.nvim.command("setlocal splitright")
         self.nvim.command("vnew")
         self.nvim.command("setlocal buftype=nofile bufhidden=hide nowrap nolist nonumber nomodifiable")
 
-        self.prependTweet("hoge")
-        win_id = self.nvim.command_output('echo win_getid()')
-        stop_event = threading.Event()
+        win_id = self.nvim.command_output('echo win_getid()').strip()
+
         self.echo('Buf: {name} opened'.format(name=win_id))
+
+        stop_event = threading.Event()
         self.streams[win_id] = stop_event
 
-        thread = threading.Thread(target=self.api.timeline_stream, args=(stop_event, self.prependTweet))
+        thread = threading.Thread(target=self.api.timeline_stream, args=(stop_event, self.echo))
         thread.start()
 
     @neovim.autocmd('BufWinLeave', sync=True)
-    def close_stream(self):
+    def close_timeline(self):
         if len(self.streams) == 0:
             return
 
-        win_id = self.nvim.command_output('echo win_getid()')
+        win_id = self.nvim.command_output('echo win_getid()').strip()
+
         self.echo('Buf: {name} closed'.format(name=win_id))
+
         if self.streams[win_id] is not None:
             self.streams[win_id].set()
