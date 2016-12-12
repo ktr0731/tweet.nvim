@@ -48,3 +48,10 @@ class TweetNvim(object):
         self.nvim.command("setlocal splitright")
         self.nvim.command("vnew")
         self.nvim.command("setlocal buftype=nofile bufhidden=hide nowrap nolist nonumber nomodifiable")
+
+        # Windowを取得、セットする
+        # stop_event = threading.Event()
+        # thread = threading.Thread(target=self.api.timeline_stream, args=(e,))
+        # thread.start()
+        # stop_event.set()
+        # TODO: どうやってウインドウが閉じられたかを判断するか

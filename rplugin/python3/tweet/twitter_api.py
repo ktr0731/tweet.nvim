@@ -28,15 +28,23 @@ class TwitterAPI:
 
         r = self.twitter.post(url, params=params)
 
-    def timeline_stream(self):
+    def timeline_stream(self, stop_event):
         url = self._stream_base + 'statuses/filter.json'
 
         params = {'follow': ','.join(self.friends)}
         r = self.twitter.post(url, params=params, stream=True)
 
         for line in r.iter_lines():
+            if stop_event.is_set():
+                break
+
             if line:
                 decoded_line = line.decode('utf-8')
                 t = json.loads(decoded_line)
-                if t['user']['name'] is not None and t['text'] is not None and t['user']['id_str'] is not None and t['user']['id_str'] in self.friends:
-                    print("{name}: {tweet}\n\n----------\n".format(name=t['user']['name'], tweet=t['text']))
+
+                # 取りこぼしツイート
+                if t['user'] is None or t['user']['name'] is None or t['text'] is None:
+                    continue
+
+                print("{name}: {tweet}\n\n----------\n".format(name=t['user']['name'], tweet=t['text']))
+                # return "{name}: {tweet}\n\n----------\n".format(name=t['user']['name'], tweet=t['text'])
