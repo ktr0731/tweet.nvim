@@ -28,7 +28,7 @@ class TwitterAPI:
 
         r = self.twitter.post(url, params=params)
 
-    def timeline_stream(self, stop_event):
+    def timeline_stream(self, stop_event, writer):
         url = self._stream_base + 'statuses/filter.json'
 
         params = {'follow': ','.join(self.friends)}
@@ -46,5 +46,5 @@ class TwitterAPI:
                 if t['user'] is None or t['user']['name'] is None or t['text'] is None:
                     continue
 
-                print("{name}: {tweet}\n\n----------\n".format(name=t['user']['name'], tweet=t['text']))
+                writer("{name}: {tweet}\n\n----------\n".format(name=t['user']['name'], tweet=t['text']))
                 # return "{name}: {tweet}\n\n----------\n".format(name=t['user']['name'], tweet=t['text'])

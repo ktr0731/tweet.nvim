@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import os
+import threading
 
 import neovim
 
-from .api import Api
+from .twitter_api import TwitterAPI
 
 
 @neovim.plugin
@@ -25,10 +26,18 @@ class TweetNvim(object):
                 keys[key] = os.getenv('TWEET_NVIM_{}'.format(key))
 
         self.nvim = nvim
-        self.api = Api(keys)
+        self.api = TwitterAPI(keys)
+
+        # ストリームを開いているウインドウ
+        self.streams = {}
 
     def echo(self, message):
         self.nvim.command("echo '[Tweet.nvim] {}'".format(message))
+
+    def prependTweet(self, tweet):
+        self.nvim.command("setlocal modifiable")
+        self.nvim.current.buffer.append([tweet])
+        self.nvim.command("setlocal nomodifiable")
 
     @neovim.command('Tweet', nargs='*', sync=True)
     def tweet(self, lines):
@@ -49,9 +58,21 @@ class TweetNvim(object):
         self.nvim.command("vnew")
         self.nvim.command("setlocal buftype=nofile bufhidden=hide nowrap nolist nonumber nomodifiable")
 
-        # Windowを取得、セットする
-        # stop_event = threading.Event()
-        # thread = threading.Thread(target=self.api.timeline_stream, args=(e,))
-        # thread.start()
-        # stop_event.set()
-        # TODO: どうやってウインドウが閉じられたかを判断するか
+        self.prependTweet("hoge")
+        win_id = self.nvim.command_output('echo win_getid()')
+        stop_event = threading.Event()
+        self.echo('Buf: {name} opened'.format(name=win_id))
+        self.streams[win_id] = stop_event
+
+        thread = threading.Thread(target=self.api.timeline_stream, args=(stop_event, self.prependTweet))
+        thread.start()
+
+    @neovim.autocmd('BufWinLeave', sync=True)
+    def close_stream(self):
+        if len(self.streams) == 0:
+            return
+
+        win_id = self.nvim.command_output('echo win_getid()')
+        self.echo('Buf: {name} closed'.format(name=win_id))
+        if self.streams[win_id] is not None:
+            self.streams[win_id].set()
