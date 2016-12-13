@@ -3,10 +3,15 @@
 import os
 import threading
 import queue
+import json
 
 import neovim
+from requests_oauthlib import OAuth1Session
 
 from .twitter_api import TwitterAPI
+
+def hoge():
+    raise Exception
 
 
 @neovim.plugin
@@ -36,11 +41,34 @@ class TweetNvim(object):
     def echo(self, message):
         self.nvim.command("echo '[Tweet.nvim] {}'".format(message))
 
-    def prependTweet(self, tweet):
-        self.nvim.command("echo '[Tweet.nvim] {}'".format(tweet))
-        self.nvim.command("setlocal modifiable")
-        self.nvim.current.buffer.append(tweet, 0)
-        self.nvim.command("setlocal nomodifiable")
+    # def prependTweet(self, tweet):
+    #     self.nvim.command("echo '[Tweet.nvim] {}'".format(tweet))
+        # self.nvim.command("setlocal modifiable")
+        # self.nvim.current.buffer.append(tweet, 0)
+        # self.nvim.command("setlocal nomodifiable")
+
+    def timeline(self, conn, stop_event):
+        first = True
+        for line in conn.iter_lines():
+            if stop_event.is_set():
+                break
+
+            if first:
+                first = False
+                continue
+
+            if line:
+                decoded_line = line.decode('utf-8')
+                t = json.loads(decoded_line)
+
+                # 取りこぼしツイート
+                if 'user' not in t or 'name' not in t['user'] or 'text' not in t:
+                    continue
+
+                # うごかない
+                neovim.async_call(neovim.command, "echo '{name}: {tweet}\n\n----------\n'".format(name=t['user']['name'], tweet=t['text']))
+                # self.echo('{name}: {tweet}\n\n----------\n'.format(name=t['user']['name'], tweet=t['text']))
+                # print("{name}: {tweet}\n\n----------\n".format(name=t['user']['name'], tweet=t['text']))
 
     @neovim.command('Tweet', nargs='*', sync=True)
     def tweet(self, lines):
@@ -68,7 +96,8 @@ class TweetNvim(object):
         stop_event = threading.Event()
         self.streams[win_id] = stop_event
 
-        thread = threading.Thread(target=self.api.timeline_stream, args=(stop_event, self.echo))
+        # thread = threading.Thread(target=self.api.timeline_stream, args=(stop_event))
+        thread = threading.Thread(target=self.timeline, args=(self.api.timeline_stream(), stop_event))
         thread.start()
 
     @neovim.autocmd('BufWinLeave', sync=True)
