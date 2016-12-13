@@ -24,6 +24,15 @@ class TwitterAPI:
 
         r = self.twitter.post(url, params=params)
 
+    def timeline(self, since_id=None):
+        if since_id is not None:
+            url = self._api_base + 'statuses/home_timeline.json?count=100?since_id={id}'.format(id=since_id)
+        else:
+            url = self._api_base + 'statuses/home_timeline.json?count=100'
+
+        r = self.twitter.get(url)
+        return json.loads(r.text)
+
     def timeline_stream(self):
         url = self._stream_base + 'user.json'
 
