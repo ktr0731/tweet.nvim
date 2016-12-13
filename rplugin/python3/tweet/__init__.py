@@ -48,28 +48,6 @@ class TweetNvim(object):
             self.nvim.current.buffer.append(line)
         self.nvim.command('setlocal nomodifiable')
 
-    # def timeline_stream(self, conn, stop_event):
-    #     first = True
-    #     for line in conn.iter_lines():
-    #         if stop_event.is_set():
-    #             break
-    #
-    #         if first:
-    #             first = False
-    #             continue
-    #
-    #         if line:
-    #             decoded_line = line.decode('utf-8')
-    #             t = json.loads(decoded_line)
-    #
-    #             # 取りこぼしツイート
-    #             if 'user' not in t or 'name' not in t['user'] or 'text' not in t:
-    #                 continue
-    #
-    #             # うごかない
-    #             # neovim.async_call(neovim.command, "echo '{name}: {tweet}\n\n----------\n'".format(name=t['user']['name'], tweet=t['text']))
-    #             self.echo('{name}: {tweet}\n\n----------\n'.format(name=t['user']['name'], tweet=t['text']))
-
     @neovim.command('Tweet', nargs='*', sync=True)
     def tweet(self, lines):
         if len(lines) == 0:
@@ -122,24 +100,6 @@ class TweetNvim(object):
 
         self.prependTweet(content)
 
-    @neovim.command('TimelineStream')
-    def create_stream(self):
-        self.echo("Sorry. Timeline streaming is not yet implemented...")
-        # self.nvim.command("setlocal splitright")
-        # self.nvim.command("vnew")
-        # self.nvim.command("setlocal buftype=nofile bufhidden=hide nowrap nolist nonumber nomodifiable")
-        #
-        # win_id = self.nvim.command_output('echo win_getid()').strip()
-        #
-        # self.echo('Buf: {name} opened'.format(name=win_id))
-        #
-        # stop_event = threading.Event()
-        # self.streams[win_id] = stop_event
-
-        # thread = threading.Thread(target=self.api.timeline_stream, args=(stop_event))
-        # thread = threading.Thread(target=self.timeline_stream(), args=(self.api.timeline_stream(), stop_event))
-        # thread.start()
-
     @neovim.autocmd('BufWinLeave', sync=True)
     def close_timeline(self):
         if self.home_timeline['opened']:
@@ -147,14 +107,3 @@ class TweetNvim(object):
             self.home_timeline['opened'] = False
             del self.home_timeline['since_id']
             del self.home_timeline['window_id']
-
-    def close_timeline_stream(self):
-        if len(self.streams) == 0:
-            return
-
-        win_id = self.nvim.command_output('echo win_getid()').strip()
-
-        self.echo('Buf: {name} closed'.format(name=win_id))
-
-        if self.streams[win_id] is not None:
-            self.streams[win_id].set()
