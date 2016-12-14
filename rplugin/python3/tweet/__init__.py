@@ -44,8 +44,11 @@ class TweetNvim(object):
 
     def prependTweet(self, tweets):
         self.nvim.command('setlocal modifiable')
+
         for line in tweets.split('\n')[::-1]:
             self.nvim.current.buffer.append(line, 0)
+
+        self.nvim.current.window.cursor = (1, 1)
         self.nvim.command('setlocal nomodifiable')
 
     @neovim.command('Tweet', nargs='*', sync=True)
