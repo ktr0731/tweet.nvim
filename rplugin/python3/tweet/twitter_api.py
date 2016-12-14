@@ -26,7 +26,7 @@ class TwitterAPI:
 
     def timeline(self, since_id=None):
         if since_id is not None:
-            url = self._api_base + 'statuses/home_timeline.json?count=100?since_id={id}'.format(id=since_id)
+            url = self._api_base + 'statuses/home_timeline.json?count=100&since_id={id}'.format(id=since_id)
         else:
             url = self._api_base + 'statuses/home_timeline.json?count=100'
 

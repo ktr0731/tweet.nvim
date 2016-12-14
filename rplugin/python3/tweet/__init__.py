@@ -44,8 +44,8 @@ class TweetNvim(object):
 
     def prependTweet(self, tweets):
         self.nvim.command('setlocal modifiable')
-        for line in tweets.split('\n'):
-            self.nvim.current.buffer.append(line)
+        for line in tweets.split('\n')[::-1]:
+            self.nvim.current.buffer.append(line, 0)
         self.nvim.command('setlocal nomodifiable')
 
     @neovim.command('Tweet', nargs='*', sync=True)
@@ -74,8 +74,6 @@ class TweetNvim(object):
         else:
             tweets = self.api.timeline()
 
-        self.echo(len(tweets))
-
         if len(tweets) == 0:
             return
 
@@ -92,8 +90,7 @@ class TweetNvim(object):
                     )
             content += "\n--------------------\n\n"
 
-        self.echo(tweets)
-        self.home_timeline['since_id'] = tweets[-1]['id_str']
+        self.home_timeline['since_id'] = tweets[0]['id_str']
 
         if 'window_id' not in self.home_timeline:
             self.home_timeline['window_id'] = self.nvim.command_output('echo win_getid()').strip()
