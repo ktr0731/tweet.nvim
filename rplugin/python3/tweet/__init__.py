@@ -1,15 +1,28 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 import threading
 import queue
 import json
 
 import neovim
 from requests_oauthlib import OAuth1Session
+from functools import wraps
 
 from .twitter_api import TwitterAPI
 from .timeline import Timeline
+
+
+def homeTimelineRequired(func):
+    @wraps(func)
+    def checkHomeTimeline(*args, **kwargs):
+        self = args[0]
+        if 'home' not in self.timeline:
+            self.echo("Please load Home Timeline!")
+            return
+        return func(*args)
+    return checkHomeTimeline
 
 @neovim.plugin
 class TweetNvim(object):
@@ -20,6 +33,8 @@ class TweetNvim(object):
         self.streams = {}
         self.queues = {}
         self.timeline = {}
+
+        self.separater = re.compile('^-*$')
 
     def echo(self, message):
         self.nvim.command("echo '[Tweet.nvim] {}'".format(message))
@@ -51,18 +66,22 @@ class TweetNvim(object):
         if 'home' not in self.timeline:
             self.nvim.command("setlocal splitright")
             self.nvim.command("vnew")
-            self.nvim.command("setlocal buftype=nofile bufhidden=hide nowrap nolist nonumber nomodifiable")
+            self.nvim.command("setlocal buftype=nofile bufhidden=hide nowrap nolist nonumber nomodifiable wrap")
             self.timeline['home'] = Timeline(self.nvim.command_output('echo win_getid()').strip())
 
+        self.timeline['home'].fetch()
         content = ''
         for tweet in self.timeline['home'].tweets:
             if 'user' not in 'text' not in tweet:
                 continue
 
-            content += '{name} @{id}\n\n{tweet}\n'.format(
+            text = tweet['text'].replace('\n', '\n  ')
+            text.rstrip()
+
+            content += '{name} @{id}\n\n  {tweet}\n'.format(
                     name=tweet['user']['name'],
                     id=tweet['user']['screen_name'],
-                    tweet=tweet['text'],
+                    tweet=text,
                     created_at=tweet['created_at']
                     )
 
@@ -72,12 +91,18 @@ class TweetNvim(object):
 
         self.prependTweet(content)
 
+    @homeTimelineRequired
     @neovim.command('Retweet')
     def retweet(self):
-        # ツイート行と配列を対応させる
-        # TODO: 明らかに効率悪そう, キャッシュ撮ったほうがよさ
-        for i in self.nvim.current.window.buffer[:]:
-            self.echo(i)
+        end = self.nvim.current.window.cursor[0]
+
+        cnt = 0
+        for line in self.nvim.current.window.buffer[:end]:
+            if self.separater.match(line) and line != "":
+                cnt += 1
+
+        id = self.timeline['home'].tweets[cnt]['id_str']
+        self.timeline['home'].retweet(id)
 
     @neovim.autocmd('BufWinLeave', sync=True)
     def close_timeline(self):

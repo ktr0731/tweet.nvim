@@ -10,14 +10,14 @@ class Timeline:
         self._tweets = []
         self._since_id = None
 
-        self._fetch()
-
     @property
     def tweets(self):
-        self._fetch()
         return self._tweets
 
-    def _fetch(self):
+    def retweet(self, id):
+        self._api.retweet(id)
+
+    def fetch(self):
         tweets = self._api.timeline(self._since_id)
 
         if len(tweets) == 0:

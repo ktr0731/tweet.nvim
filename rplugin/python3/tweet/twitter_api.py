@@ -36,7 +36,12 @@ class TwitterAPI:
         url = self.api_base + 'statuses/update.json'
         params = {'status': content}
 
-        r = self.twitter.post(url, params=params)
+        self.twitter.post(url, params=params)
+
+    def retweet(self, id):
+        url = self.api_base + 'statuses/retweet/{}.json'.format(id)
+
+        self.twitter.post(url)
 
     def timeline(self, since_id=None):
         url = self.api_base + 'statuses/home_timeline.json?count=100'
