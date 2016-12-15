@@ -8,10 +8,24 @@ from requests_oauthlib import OAuth1Session
 
 
 class TwitterAPI:
-    _api_base = 'https://api.twitter.com/1.1/'
-    _stream_base = 'https://userstream.twitter.com/1.1/'
+    api_base = 'https://api.twitter.com/1.1/'
+    stream_base = 'https://userstream.twitter.com/1.1/'
 
-    def __init__(self, keys):
+    def __init__(self):
+        keys = {
+                'CONSUMER': '',
+                'CONSUMER_SECRET': '',
+                'ACCESS_TOKEN': '',
+                'ACCESS_TOKEN_SECRET': ''
+                }
+
+        for key in keys.keys():
+            # TODO: Vim 変数も確認する
+            if os.getenv('TWEET_NVIM_{}'.format(key)) is None:
+                raise Exception('Required environment variables are missing!')
+            else:
+                keys[key] = os.getenv('TWEET_NVIM_{}'.format(key))
+
         self.twitter = OAuth1Session(
                 keys['CONSUMER'],
                 keys['CONSUMER_SECRET'],
@@ -19,16 +33,16 @@ class TwitterAPI:
                 keys['ACCESS_TOKEN_SECRET'])
 
     def tweet(self, content):
-        url = self._api_base + 'statuses/update.json'
+        url = self.api_base + 'statuses/update.json'
         params = {'status': content}
 
         r = self.twitter.post(url, params=params)
 
     def timeline(self, since_id=None):
+        url = self.api_base + 'statuses/home_timeline.json?count=100'
+
         if since_id is not None:
-            url = self._api_base + 'statuses/home_timeline.json?count=100&since_id={id}'.format(id=since_id)
-        else:
-            url = self._api_base + 'statuses/home_timeline.json?count=100'
+            url += '&since_id={id}'.format(id=since_id)
 
         r = self.twitter.get(url)
         return json.loads(r.text)
@@ -39,4 +53,3 @@ class TwitterAPI:
         conn = self.twitter.get(url, stream=True)
 
         return conn
-

@@ -9,35 +9,17 @@ import neovim
 from requests_oauthlib import OAuth1Session
 
 from .twitter_api import TwitterAPI
-
-def hoge():
-    raise Exception
-
+from .timeline import Timeline
 
 @neovim.plugin
 class TweetNvim(object):
     def __init__(self, nvim):
-        keys = {
-                'CONSUMER': '',
-                'CONSUMER_SECRET': '',
-                'ACCESS_TOKEN': '',
-                'ACCESS_TOKEN_SECRET': ''
-                }
-
-        for key in keys.keys():
-            # TODO: Vim 変数も確認する
-            if os.getenv('TWEET_NVIM_{}'.format(key)) is None:
-                raise Exception('Required environment variables are missing!')
-            else:
-                keys[key] = os.getenv('TWEET_NVIM_{}'.format(key))
-
         self.nvim = nvim
-        self.api = TwitterAPI(keys)
 
         # ストリームを開いているウインドウ
         self.streams = {}
         self.queues = {}
-        self.home_timeline = {'opened': False}
+        self.timeline = {}
 
     def echo(self, message):
         self.nvim.command("echo '[Tweet.nvim] {}'".format(message))
@@ -60,50 +42,45 @@ class TweetNvim(object):
         for line in lines:
             content += line + '\n'
 
-        self.api.tweet(content)
+        # self.api.tweet(content)
 
         self.echo('Tweeted')
 
-    @neovim.command('Timeline')
-    def timeline(self):
-        if not self.home_timeline['opened']:
+    @neovim.command('HomeTimeline')
+    def home_timeline(self):
+        if 'home' not in self.timeline:
             self.nvim.command("setlocal splitright")
             self.nvim.command("vnew")
             self.nvim.command("setlocal buftype=nofile bufhidden=hide nowrap nolist nonumber nomodifiable")
-            self.home_timeline['opened'] = True
-
-        if 'since_id' in self.home_timeline:
-            tweets = self.api.timeline(self.home_timeline['since_id'])
-        else:
-            tweets = self.api.timeline()
-
-        if len(tweets) == 0:
-            return
+            self.timeline['home'] = Timeline(self.nvim.command_output('echo win_getid()').strip())
 
         content = ''
-        for tweet in tweets:
-            if 'user' not in 'text' not in 'created_at' not in tweet:
+        for tweet in self.timeline['home'].tweets:
+            if 'user' not in 'text' not in tweet:
                 continue
 
-            content += '{name} @{id}\n\n{tweet}\n\n{created_at}\n'.format(
+            content += '{name} @{id}\n\n{tweet}\n'.format(
                     name=tweet['user']['name'],
                     id=tweet['user']['screen_name'],
                     tweet=tweet['text'],
                     created_at=tweet['created_at']
                     )
-            content += "\n--------------------\n\n"
 
-        self.home_timeline['since_id'] = tweets[0]['id_str']
+            window_width = self.nvim.current.window.width
 
-        if 'window_id' not in self.home_timeline:
-            self.home_timeline['window_id'] = self.nvim.command_output('echo win_getid()').strip()
+            content += "-" * window_width + "\n"
 
         self.prependTweet(content)
 
+    @neovim.command('Retweet')
+    def retweet(self):
+        # ツイート行と配列を対応させる
+        # TODO: 明らかに効率悪そう, キャッシュ撮ったほうがよさ
+        for i in self.nvim.current.window.buffer[:]:
+            self.echo(i)
+
     @neovim.autocmd('BufWinLeave', sync=True)
     def close_timeline(self):
-        if self.home_timeline['opened']:
+        if 'home' in self.timeline:
             self.echo("Close timeline")
-            self.home_timeline['opened'] = False
-            del self.home_timeline['since_id']
-            del self.home_timeline['window_id']
+            del self.timeline['home']
