@@ -56,6 +56,9 @@ class Timeline:
     def tweets(self):
         return self._tweets
 
+    def tweet(self, content):
+        self._api.tweet(content)
+
     def retweet(self, buf):
         tweet = self._selectedTweet(buf)
         id = tweet['id_str']

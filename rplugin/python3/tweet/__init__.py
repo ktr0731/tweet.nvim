@@ -31,11 +31,6 @@ class TweetNvim(object):
     def __init__(self, nvim):
         self.nvim = nvim
 
-        # ストリームを開いているウインドウ
-        self.streams = {}
-        self.queues = {}
-        self.timeline = {}
-
     def echo(self, message):
         self.nvim.command("echo '[Tweet.nvim] {}'".format(message))
 
@@ -48,19 +43,6 @@ class TweetNvim(object):
         self.nvim.current.window.cursor = (1, 1)
         self.nvim.command('setlocal nomodifiable')
 
-    @neovim.command('Tweet', nargs='*', sync=True)
-    def tweet(self, lines):
-        if len(lines) == 0:
-            self.echo('Usage: Tweet [line...]')
-
-        content = ''
-        for line in lines:
-            content += line + '\n'
-
-        # self.api.tweet(content)
-
-        self.echo('Tweeted')
-
     @neovim.command('HomeTimeline')
     def home_timeline(self):
         if 'home' not in self.timeline:
@@ -70,6 +52,24 @@ class TweetNvim(object):
             self.timeline['home'] = Timeline(self.nvim.command_output('echo win_getid()').strip())
 
         self.prependTweet(self.timeline['home'].generate(self.nvim.current.window.width))
+
+    @timelineRequired
+    @neovim.command('Tweet', nargs='*', sync=True)
+    def tweet(self, lines):
+        MAX_CHARS = 140
+
+        if len(lines) == 0:
+            self.echo('Usage: Tweet [line...]')
+
+        content = ''
+        for line in lines:
+            content += line + '\n'
+
+        if len(content) > MAX_CHARS:
+            self.echo('Tweet must be less than {}'.format(MAX_CHARS))
+
+        self.timeline['home'].tweet(content)
+        self.echo('Tweeted')
 
     @timelineRequired
     @neovim.command('Retweet')
@@ -86,6 +86,8 @@ class TweetNvim(object):
         tweet = self.timeline['home'].like(self.nvim.current.window.buffer[:end])
 
         self.echo('Liked: {}'.format(tweet['text']))
+
+
 
     @neovim.autocmd('BufWinLeave', sync=True)
     def close_timeline(self):

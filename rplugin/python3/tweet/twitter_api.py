@@ -5,7 +5,7 @@ import json
 import neovim
 
 from requests_oauthlib import OAuth1Session
-
+from requests import exceptions
 
 class TwitterAPI:
     api_base = 'https://api.twitter.com/1.1/'
@@ -44,10 +44,9 @@ class TwitterAPI:
         self.twitter.post(url)
 
     def like(self, id):
-        url = self.api_base + 'favorites/create.json'
-        params = {'id': id}
+        url = self.api_base + 'favorites/create.json?id={}'.format(id)
 
-        self.twitter.post(url, params=params)
+        self.twitter.post(url)
 
     def timeline(self, since_id=None):
         url = self.api_base + 'statuses/home_timeline.json?count=100'
