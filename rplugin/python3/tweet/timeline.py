@@ -4,9 +4,11 @@ import re
 from .twitter_api import TwitterAPI
 
 class Timeline:
-    def __init__(self, win_id):
+    def __init__(self, win_id, home_timeline=False, list_id=None):
         self.win_id = win_id
 
+        self._home_timeline = home_timeline
+        self._list_id = list_id
         self._api = TwitterAPI()
         self._tweets = []
         self._since_id = None
@@ -14,7 +16,10 @@ class Timeline:
         self._separater = re.compile('^-*$')
 
     def _fetch(self):
-        tweets = self._api.timeline(self._since_id)
+        if self._home_timeline:
+            tweets = self._api.timeline(self._since_id, home_timeline=True)
+        else:
+            tweets = self._api.timeline(self._since_id, list_id=self._list_id)
 
         if len(tweets) == 0:
             return
@@ -55,9 +60,6 @@ class Timeline:
     @property
     def tweets(self):
         return self._tweets
-
-    def tweet(self, content):
-        self._api.tweet(content)
 
     def retweet(self, buf):
         tweet = self._selectedTweet(buf)

@@ -31,6 +31,11 @@ class TweetNvim(object):
     def __init__(self, nvim):
         self.nvim = nvim
 
+        self.timeline = {}
+        self.lists = {}
+        for list in TwitterAPI().lists():
+            self.lists[list['name']] = list['id_str']
+
     def echo(self, message):
         self.nvim.command("echo '[Tweet.nvim] {}'".format(message))
 
@@ -49,12 +54,11 @@ class TweetNvim(object):
             self.nvim.command("setlocal splitright")
             self.nvim.command("vnew")
             self.nvim.command("setlocal buftype=nofile bufhidden=hide nolist nonumber nomodifiable wrap")
-            self.timeline['home'] = Timeline(self.nvim.command_output('echo win_getid()').strip())
+            self.timeline['home'] = Timeline(self.nvim.command_output('echo win_getid()').strip(), home_timeline=True)
 
         self.prependTweet(self.timeline['home'].generate(self.nvim.current.window.width))
 
-    @timelineRequired
-    @neovim.command('Tweet', nargs='*', sync=True)
+    @neovim.command('Tweet', nargs='*')
     def tweet(self, lines):
         MAX_CHARS = 140
 
@@ -68,7 +72,7 @@ class TweetNvim(object):
         if len(content) > MAX_CHARS:
             self.echo('Tweet must be less than {}'.format(MAX_CHARS))
 
-        self.timeline['home'].tweet(content)
+        TwitterAPI().tweet(content)
         self.echo('Tweeted')
 
     @timelineRequired
@@ -87,7 +91,28 @@ class TweetNvim(object):
 
         self.echo('Liked: {}'.format(tweet['text']))
 
+    @neovim.command('ShowLists')
+    def list(self):
+        if len(self.lists) == 0:
+            for list in TwitterAPI().lists():
+                self.lists[list['name']] = list['id_str']
 
+        self.echo('lists:\n' + '\n'.join([name for name in self.lists.keys()]))
+
+    @neovim.command('Timeline', nargs=1)
+    def list_timeline(self, name):
+        self.echo(name[0])
+        if name[0] not in self.lists:
+            self.echo('No such list')
+            return
+
+        if name[0] not in self.timeline:
+            self.nvim.command("setlocal splitright")
+            self.nvim.command("vnew")
+            self.nvim.command("setlocal buftype=nofile bufhidden=hide nolist nonumber nomodifiable wrap")
+            self.timeline[name[0]] = Timeline(self.nvim.command_output('echo win_getid()').strip(), list_id=self.lists[name[0]])
+
+        self.prependTweet(self.timeline[name[0]].generate(self.nvim.current.window.width))
 
     @neovim.autocmd('BufWinLeave', sync=True)
     def close_timeline(self):
