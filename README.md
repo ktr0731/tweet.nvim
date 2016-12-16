@@ -1,5 +1,7 @@
 # Tweet.nvim
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)  
+[English](./README.md) | [日本語](./README-ja.md)  
+
 A simple Neovim remote plugin for Twitter written in Python3
 
 ===
@@ -28,13 +30,43 @@ export TWEET_NVIM_ACCESS_TOKEN_PRIVATE=''
 ```
 
 ## Usage 
-Do tweet based on arguments.  
-Each lines are separated by breaks.
+```
+:HomeTimeline
+```
+Open home timeline.  
+If home timeline already opened, fetch latest tweets and show.  
+
+```
+:ShowLists
+```
+Show lists.  
+
+```
+:Timeline name
+```
+Open timeline correnponding to `name`.  
+If already opened, fetch latest tweets and show.  
+
 ``` 
 :Tweet [line...]
 ```
+Do tweet based on arguments.  
+Each lines are separated by break lines.
 
+```
+:Retweet 
+```
+Do retweet a tweet that on the cursor of Neovim.  
 
+```
+:Like
+```
+Do like a tweet that on the cursor of Neovim.  
+
+```
+:Reply [line...]
+```
+Do reply to a tweet that on the cursor of Neovim.  
 
 ## License
 Please see LICENSE.

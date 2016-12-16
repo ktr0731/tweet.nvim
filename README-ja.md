@@ -1,5 +1,7 @@
 # Tweet.nvim
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)  
+[English](./README.md) | [日本語](./README-ja.md)  
+
 Python3 で実装された Neovim 上で動作するシンプルな Twitter クライアント。  
 
 ===
@@ -60,5 +62,11 @@ Neovim のカーソル上にあるツイートをリツイートします。
 :Like
 ```
 Neovim のカーソル上にあるツイートをいいねします。
+
+```
+:Reply [line...]
+```
+Neovim のカーソル上にあるツイートへ返信をします。
+
 ## License
 Please see LICENSE.
