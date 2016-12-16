@@ -43,6 +43,12 @@ class TwitterAPI:
 
         self.twitter.post(url)
 
+    def like(self, id):
+        url = self.api_base + 'favorites/create.json'
+        params = {'id': id}
+
+        self.twitter.post(url, params=params)
+
     def timeline(self, since_id=None):
         url = self.api_base + 'statuses/home_timeline.json?count=100'
 

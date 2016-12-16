@@ -22,6 +22,15 @@ class Timeline:
         self._since_id = tweets[0]['id_str']
         self._tweets = tweets + self._tweets
 
+    def _selectedTweet(self, buf):
+        cnt = 0
+        for line in buf:
+            if self._separater.match(line) and line:
+                cnt += 1
+
+        return self._tweets[cnt]
+
+
     def generate(self, width):
         self._fetch()
 
@@ -48,11 +57,15 @@ class Timeline:
         return self._tweets
 
     def retweet(self, buf):
-        cnt = 0
-        for line in buf:
-            if self._separater.match(line) and line:
-                cnt += 1
+        tweet = self._selectedTweet(buf)
+        id = tweet['id_str']
+        self._api.retweet(id)
 
-        # self._api.retweet(id)
+        return tweet
 
-        return self._tweets[cnt]
+    def like(self, buf):
+        tweet = self._selectedTweet(buf)
+        id = tweet['id_str']
+        self._api.like(id)
+
+        return tweet

@@ -10,7 +10,7 @@ from .timeline import Timeline
 
 def timelineRequired(func):
     @wraps(func)
-    def checkHomeTimeline(*args, **kwargs):
+    def checkTimeline(*args, **kwargs):
         self = args[0]
 
         if len(self.timeline) == 0:
@@ -24,7 +24,7 @@ def timelineRequired(func):
             return
 
         return func(*args)
-    return checkHomeTimeline
+    return checkTimeline
 
 @neovim.plugin
 class TweetNvim(object):
@@ -78,6 +78,14 @@ class TweetNvim(object):
         tweet = self.timeline['home'].retweet(self.nvim.current.window.buffer[:end])
 
         self.echo('Retweeted: {}'.format(tweet['text']))
+
+    @timelineRequired
+    @neovim.command('Like')
+    def like(self):
+        end = self.nvim.current.window.cursor[0]
+        tweet = self.timeline['home'].like(self.nvim.current.window.buffer[:end])
+
+        self.echo('Liked: {}'.format(tweet['text']))
 
     @neovim.autocmd('BufWinLeave', sync=True)
     def close_timeline(self):
