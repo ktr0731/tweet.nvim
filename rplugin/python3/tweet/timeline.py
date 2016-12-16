@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 from .twitter_api import TwitterAPI
 
 class Timeline:
@@ -9,6 +10,8 @@ class Timeline:
         self._api = TwitterAPI()
         self._tweets = []
         self._since_id = None
+
+        self._separater = re.compile('^-*$')
 
     def _fetch(self):
         tweets = self._api.timeline(self._since_id)
@@ -38,10 +41,18 @@ class Timeline:
 
             content += "-" * width + "\n"
 
+        return content
 
     @property
     def tweets(self):
         return self._tweets
 
-    def retweet(self, id):
-        self._api.retweet(id)
+    def retweet(self, buf):
+        cnt = 0
+        for line in buf:
+            if self._separater.match(line) and line:
+                cnt += 1
+
+        # self._api.retweet(id)
+
+        return self._tweets[cnt]

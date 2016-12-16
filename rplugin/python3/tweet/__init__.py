@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
-import re
-import threading
-import queue
-import json
-
 import neovim
 from requests_oauthlib import OAuth1Session
 from functools import wraps
@@ -14,13 +8,21 @@ from .twitter_api import TwitterAPI
 from .timeline import Timeline
 
 
-def homeTimelineRequired(func):
+def timelineRequired(func):
     @wraps(func)
     def checkHomeTimeline(*args, **kwargs):
         self = args[0]
-        if 'home' not in self.timeline:
-            self.echo("Please load Home Timeline!")
+
+        if len(self.timeline) == 0:
+            self.echo("Please load Timeline")
             return
+
+        win_id = self.nvim.command_output('echo win_getid()').strip()
+        win_ids = [timeline.win_id for timeline in self.timeline.values()]
+        if win_id not in win_ids:
+            self.echo("Move the cursor to the tweet you want to RT")
+            return
+
         return func(*args)
     return checkHomeTimeline
 
@@ -33,8 +35,6 @@ class TweetNvim(object):
         self.streams = {}
         self.queues = {}
         self.timeline = {}
-
-        self.separater = re.compile('^-*$')
 
     def echo(self, message):
         self.nvim.command("echo '[Tweet.nvim] {}'".format(message))
@@ -71,18 +71,13 @@ class TweetNvim(object):
 
         self.prependTweet(self.timeline['home'].generate(self.nvim.current.window.width))
 
-    @homeTimelineRequired
+    @timelineRequired
     @neovim.command('Retweet')
     def retweet(self):
         end = self.nvim.current.window.cursor[0]
+        tweet = self.timeline['home'].retweet(self.nvim.current.window.buffer[:end])
 
-        cnt = 0
-        for line in self.nvim.current.window.buffer[:end]:
-            if self.separater.match(line) and line != "":
-                cnt += 1
-
-        id = self.timeline['home'].tweets[cnt]['id_str']
-        self.timeline['home'].retweet(id)
+        self.echo('Retweeted: {}'.format(tweet['text']))
 
     @neovim.autocmd('BufWinLeave', sync=True)
     def close_timeline(self):
