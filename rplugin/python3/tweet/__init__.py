@@ -66,30 +66,10 @@ class TweetNvim(object):
         if 'home' not in self.timeline:
             self.nvim.command("setlocal splitright")
             self.nvim.command("vnew")
-            self.nvim.command("setlocal buftype=nofile bufhidden=hide nowrap nolist nonumber nomodifiable wrap")
+            self.nvim.command("setlocal buftype=nofile bufhidden=hide nolist nonumber nomodifiable wrap")
             self.timeline['home'] = Timeline(self.nvim.command_output('echo win_getid()').strip())
 
-        self.timeline['home'].fetch()
-        content = ''
-        for tweet in self.timeline['home'].tweets:
-            if 'user' not in 'text' not in tweet:
-                continue
-
-            text = tweet['text'].replace('\n', '\n  ')
-            text.rstrip()
-
-            content += '{name} @{id}\n\n  {tweet}\n'.format(
-                    name=tweet['user']['name'],
-                    id=tweet['user']['screen_name'],
-                    tweet=text,
-                    created_at=tweet['created_at']
-                    )
-
-            window_width = self.nvim.current.window.width
-
-            content += "-" * window_width + "\n"
-
-        self.prependTweet(content)
+        self.prependTweet(self.timeline['home'].generate(self.nvim.current.window.width))
 
     @homeTimelineRequired
     @neovim.command('Retweet')
