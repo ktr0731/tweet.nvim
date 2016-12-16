@@ -60,8 +60,6 @@ class TweetNvim(object):
 
     @neovim.command('Tweet', nargs='*')
     def tweet(self, lines):
-        MAX_CHARS = 140
-
         if len(lines) == 0:
             self.echo('Usage: Tweet [line...]')
 
@@ -69,8 +67,8 @@ class TweetNvim(object):
         for line in lines:
             content += line + '\n'
 
-        if len(content) > MAX_CHARS:
-            self.echo('Tweet must be less than {}'.format(MAX_CHARS))
+        if len(content) > TwitterAPI.MAX_CHARS:
+            self.echo('Tweet must be less than {}'.format(TwitterAPI.MAX_CHARS))
 
         TwitterAPI().tweet(content)
         self.echo('Tweeted')
@@ -90,6 +88,24 @@ class TweetNvim(object):
         tweet = self.timeline['home'].like(self.nvim.current.window.buffer[:end])
 
         self.echo('Liked: {}'.format(tweet['text']))
+
+    @timelineRequired
+    @neovim.command('Reply', nargs='*')
+    def reply(self, lines):
+        if len(lines) == 0:
+            self.echo('Usage: Reply [line...]')
+
+        content = ''
+        for line in lines:
+            content += line + '\n'
+
+        if len(content) > TwitterAPI.MAX_CHARS:
+            self.echo('Tweet must be less than {}'.format(TwitterAPI.MAX_CHARS))
+
+        end = self.nvim.current.window.cursor[0]
+        # TODO: home 以外も対応
+        tweet = self.timeline['home'].reply(self.nvim.current.window.buffer[:end], content)
+        self.echo('Replied: {}'.format(tweet['text']))
 
     @neovim.command('ShowLists')
     def list(self):

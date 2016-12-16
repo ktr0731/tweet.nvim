@@ -8,6 +8,8 @@ from requests_oauthlib import OAuth1Session
 from requests import exceptions
 
 class TwitterAPI:
+    MAX_CHARS = 140
+
     _api_base = 'https://api.twitter.com/1.1/'
     stream_base = 'https://userstream.twitter.com/1.1/'
 
@@ -20,7 +22,6 @@ class TwitterAPI:
                 }
 
         for key in keys.keys():
-            # TODO: Vim 変数も確認する
             if os.getenv('TWEET_NVIM_{}'.format(key)) is None:
                 raise Exception('Required environment variables are missing!')
             else:
@@ -47,6 +48,12 @@ class TwitterAPI:
         url = self._api_base + 'favorites/create.json?id={}'.format(id)
 
         self.twitter.post(url)
+
+    def reply(self, content, id):
+        url = self._api_base + 'statuses/update.json?in_reply_to_status_id={}'.format(id)
+        params = {'status': content}
+
+        self.twitter.post(url, params=params)
 
     def timeline(self, since_id=None, home_timeline=False, list_id=None):
         if home_timeline:

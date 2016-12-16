@@ -74,3 +74,9 @@ class Timeline:
         self._api.like(id)
 
         return tweet
+
+    def reply(self, buf, content):
+        tweet = self._selectedTweet(buf)
+        self._api.reply('@{name} {content}'.format(name=tweet['user']['screen_name'], content=content), tweet['id_str'])
+
+        return tweet
