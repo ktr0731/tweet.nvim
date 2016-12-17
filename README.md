@@ -4,6 +4,8 @@
 
 A simple Neovim remote plugin for Twitter written in Python3
 
+![](./res/screen_shot.png)  
+
 ===
 
 ## Equipments
@@ -31,46 +33,46 @@ export TWEET_NVIM_ACCESS_TOKEN_PRIVATE=''
 
 ## Usage 
 ```
-:HomeTimeline
+:TweetNvimHomeTimeline
 ```
 Open home timeline.  
 If home timeline already opened, fetch latest tweets and show.  
 
 ```
-:MentionsTimeline
+:TweetNvimMentionsTimeline
 ```
 Open the timeline about mentions to me.  
 If already opened, fetch latest tweets and show.  
 
 ```
-:ShowLists
+:TweetNvimShowLists
 ```
 Show lists.  
 
 ```
-:Timeline name
+:TweetNvimTimeline name
 ```
 Open timeline correnponding to `name`.  
 If already opened, fetch latest tweets and show.  
 
 ``` 
-:Tweet [line...]
+:TweetNvimTweet [line...]
 ```
 Do tweet based on arguments.  
 Each lines are separated by break lines.
 
 ```
-:Retweet 
+:TweetNvimRetweet 
 ```
 Do retweet a tweet that on the cursor of Neovim.  
 
 ```
-:Like
+:TweetNvimLike
 ```
 Do like a tweet that on the cursor of Neovim.  
 
 ```
-:Reply [line...]
+:TweetNvimReply [line...]
 ```
 Do reply to a tweet that on the cursor of Neovim.  
 

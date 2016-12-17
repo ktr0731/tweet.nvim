@@ -4,6 +4,8 @@
 
 Python3 で実装された Neovim 上で動作するシンプルな Twitter クライアント。  
 
+![](./res/screen_shot.png)  
+
 ===
 
 ## 必要なもの
@@ -31,46 +33,46 @@ export TWEET_NVIM_ACCESS_TOKEN_PRIVATE=''
 
 ## 使い方
 ```
-:HomeTimeline
+:TweetNvimHomeTimeline
 ```
 ホームタイムラインを表示します。  
 すでに開かれている場合、最新のツイートを取得し、表示します。  
 
 ```
-:MentionsTimeline
+:TweetNvimMentionsTimeline
 ```
 自分へのメンションのみを含むタイムラインを表示します。  
 すでに開かれている場合、最新のツイートを取得し、表示します。  
 
 ```
-:ShowLists
+:TweetNvimShowLists
 ```
 リストの一覧を表示します。  
 
 ```
-:Timeline name
+:TweetNvimTimeline name
 ```
 `name` に対応するリストのタイムラインを表示します。  
 すでに開かれている場合、最新のツイートを取得し、表示します。  
 
 ``` 
-:Tweet [line...]
+:TweetNvimTweet [line...]
 ```
 引数を元にツイートをします。  
 各引数は改行で区切られます。  
 
 ```
-:Retweet 
+:TweetNvimRetweet 
 ```
 Neovim のカーソル上にあるツイートをリツイートします。  
 
 ```
-:Like
+:TweetNvimLike
 ```
 Neovim のカーソル上にあるツイートをいいねします。
 
 ```
-:Reply [line...]
+:TweetNvimReply [line...]
 ```
 Neovim のカーソル上にあるツイートへ返信をします。
 
