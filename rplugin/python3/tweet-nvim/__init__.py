@@ -17,10 +17,10 @@ def timelineRequired(func):
             self.echo("Please load Timeline")
             return
 
-        win_id = self.nvim.command_output('echo win_getid()').strip()
+        win_id = self.nvim.current.window.number
         win_ids = [timeline.win_id for timeline in self.timeline.values()]
         if win_id not in win_ids:
-            self.echo("Move the cursor to the tweet you want to RT")
+            self.echo("Move the cursor to the tweet you want to RT, Like or Reply")
             return
 
         return func(*args)
@@ -49,7 +49,7 @@ class TweetNvim(object):
         self.nvim.command('setlocal nomodifiable')
 
     def selectedTimeline(self):
-        win_id = self.nvim.command_output('echo win_getid()').strip()
+        win_id = self.nvim.current.window.number
         for name, timeline in self.timeline.items():
             if win_id == timeline.win_id:
                 return (name, timeline)
@@ -61,9 +61,21 @@ class TweetNvim(object):
             self.nvim.command("setlocal splitright")
             self.nvim.command("vnew")
             self.nvim.command("setlocal buftype=nofile bufhidden=hide nolist nonumber nomodifiable wrap")
-            self.timeline['home'] = Timeline(self.nvim.command_output('echo win_getid()').strip(), home_timeline=True)
+            self.timeline['_home'] = Timeline(self.nvim.current.window.number, home_timeline=True)
 
-        self.prependTweet(self.timeline['home'].generate(self.nvim.current.window.width))
+        self.prependTweet(self.timeline['_home'].generate(self.nvim.current.window.width))
+        self.echo('Open home timeline')
+
+    @neovim.command('MentionsTimeline')
+    def mentions_timeline(self):
+        if 'mentions' not in self.timeline:
+            self.nvim.command("setlocal splitright")
+            self.nvim.command("vnew")
+            self.nvim.command("setlocal buftype=nofile bufhidden=hide nolist nonumber nomodifiable wrap")
+            self.timeline['_mentions'] = Timeline(self.nvim.current.window.number, mentions_timeline=True)
+
+        self.prependTweet(self.timeline['_mentions'].generate(self.nvim.current.window.width))
+        self.echo('Open mentions timeline')
 
     @neovim.command('Tweet', nargs='+')
     def tweet(self, lines):
@@ -73,6 +85,7 @@ class TweetNvim(object):
 
         if len(content) > TwitterAPI.MAX_CHARS:
             self.echo('Tweet must be less than {}'.format(TwitterAPI.MAX_CHARS))
+            return
 
         TwitterAPI().tweet(content)
         self.echo('Tweeted')
@@ -94,17 +107,15 @@ class TweetNvim(object):
         self.echo('Liked: {}'.format(tweet['text']))
 
     @timelineRequired
-    @neovim.command('Reply', nargs='*')
+    @neovim.command('Reply', nargs='+')
     def reply(self, lines):
-        if len(lines) == 0:
-            self.echo('Usage: Reply [line...]')
-
         content = ''
         for line in lines:
             content += line + '\n'
 
         if len(content) > TwitterAPI.MAX_CHARS:
             self.echo('Tweet must be less than {}'.format(TwitterAPI.MAX_CHARS))
+            return
 
         end = self.nvim.current.window.cursor[0]
         tweet = self.selectedTimeline()[1].reply(self.nvim.current.window.buffer[:end], content)
@@ -129,9 +140,10 @@ class TweetNvim(object):
             self.nvim.command("setlocal splitright")
             self.nvim.command("vnew")
             self.nvim.command("setlocal buftype=nofile bufhidden=hide nolist nonumber nomodifiable wrap")
-            self.timeline[name[0]] = Timeline(self.nvim.command_output('echo win_getid()').strip(), list_id=self.lists[name[0]])
+            self.timeline[name[0]] = Timeline(self.nvim.current.window.number, list_id=self.lists[name[0]])
 
         self.prependTweet(self.timeline[name[0]].generate(self.nvim.current.window.width))
+        self.echo('Opened timeline: {}'.format(name[0]))
 
     @neovim.autocmd('BufWinLeave', sync=True)
     def close_timeline(self):
@@ -139,5 +151,5 @@ class TweetNvim(object):
         if name is None:
             return
 
-        self.echo("Close timeline: {}".format(name))
         del self.timeline[name]
+        self.echo("Closed timeline: {}".format(name))

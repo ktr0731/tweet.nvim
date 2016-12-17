@@ -55,9 +55,11 @@ class TwitterAPI:
 
         self.twitter.post(url, params=params)
 
-    def timeline(self, since_id=None, home_timeline=False, list_id=None):
+    def timeline(self, since_id=None, home_timeline=False, mentions_timeline=False, list_id=None):
         if home_timeline:
             url = self._api_base + 'statuses/home_timeline.json?count=100'
+        elif mentions_timeline:
+            url = self._api_base + 'statuses/mentions_timeline.json?count=100'
         else:
             url = self._api_base + 'lists/statuses.json?count=100&list_id={}'.format(list_id)
 

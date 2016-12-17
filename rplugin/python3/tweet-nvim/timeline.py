@@ -4,10 +4,11 @@ import re
 from .twitter_api import TwitterAPI
 
 class Timeline:
-    def __init__(self, win_id, home_timeline=False, list_id=None):
+    def __init__(self, win_id, home_timeline=False, mentions_timeline=False, list_id=None):
         self.win_id = win_id
 
         self._home_timeline = home_timeline
+        self._mentions_timeline = mentions_timeline
         self._list_id = list_id
         self._api = TwitterAPI()
         self._tweets = []
@@ -18,6 +19,8 @@ class Timeline:
     def _fetch(self):
         if self._home_timeline:
             tweets = self._api.timeline(self._since_id, home_timeline=True)
+        elif self._mentions_timeline:
+            tweets = self._api.timeline(self._since_id, mentions_timeline=True)
         else:
             tweets = self._api.timeline(self._since_id, list_id=self._list_id)
 
