@@ -37,6 +37,12 @@ Open home timeline.
 If home timeline already opened, fetch latest tweets and show.  
 
 ```
+:MentionsTimeline
+```
+Open the timeline about mentions to me.  
+If already opened, fetch latest tweets and show.  
+
+```
 :ShowLists
 ```
 Show lists.  
