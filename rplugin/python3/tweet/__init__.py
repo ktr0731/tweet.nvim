@@ -48,6 +48,13 @@ class TweetNvim(object):
         self.nvim.current.window.cursor = (1, 1)
         self.nvim.command('setlocal nomodifiable')
 
+    def selectedTimeline(self):
+        win_id = self.nvim.command_output('echo win_getid()').strip()
+        for name, timeline in self.timeline.items():
+            if win_id == timeline.win_id:
+                return (name, timeline)
+        return (None, None)
+
     @neovim.command('HomeTimeline')
     def home_timeline(self):
         if 'home' not in self.timeline:
@@ -58,11 +65,8 @@ class TweetNvim(object):
 
         self.prependTweet(self.timeline['home'].generate(self.nvim.current.window.width))
 
-    @neovim.command('Tweet', nargs='*')
+    @neovim.command('Tweet', nargs='+')
     def tweet(self, lines):
-        if len(lines) == 0:
-            self.echo('Usage: Tweet [line...]')
-
         content = ''
         for line in lines:
             content += line + '\n'
@@ -77,7 +81,7 @@ class TweetNvim(object):
     @neovim.command('Retweet')
     def retweet(self):
         end = self.nvim.current.window.cursor[0]
-        tweet = self.timeline['home'].retweet(self.nvim.current.window.buffer[:end])
+        tweet = self.selectedTimeline()[1].retweet(self.nvim.current.window.buffer[:end])
 
         self.echo('Retweeted: {}'.format(tweet['text']))
 
@@ -85,7 +89,7 @@ class TweetNvim(object):
     @neovim.command('Like')
     def like(self):
         end = self.nvim.current.window.cursor[0]
-        tweet = self.timeline['home'].like(self.nvim.current.window.buffer[:end])
+        tweet = self.selectedTimeline()[1].like(self.nvim.current.window.buffer[:end])
 
         self.echo('Liked: {}'.format(tweet['text']))
 
@@ -103,8 +107,7 @@ class TweetNvim(object):
             self.echo('Tweet must be less than {}'.format(TwitterAPI.MAX_CHARS))
 
         end = self.nvim.current.window.cursor[0]
-        # TODO: home 以外も対応
-        tweet = self.timeline['home'].reply(self.nvim.current.window.buffer[:end], content)
+        tweet = self.selectedTimeline()[1].reply(self.nvim.current.window.buffer[:end], content)
         self.echo('Replied: {}'.format(tweet['text']))
 
     @neovim.command('ShowLists')
@@ -132,6 +135,9 @@ class TweetNvim(object):
 
     @neovim.autocmd('BufWinLeave', sync=True)
     def close_timeline(self):
-        if 'home' in self.timeline:
-            self.echo("Close timeline")
-            del self.timeline['home']
+        name = self.selectedTimeline()[0]
+        if name is None:
+            return
+
+        self.echo("Close timeline: {}".format(name))
+        del self.timeline[name]
