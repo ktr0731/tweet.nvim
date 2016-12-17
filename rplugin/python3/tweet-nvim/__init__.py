@@ -18,7 +18,8 @@ def timelineRequired(func):
             self.echo('Please load Timeline')
             return
 
-        win_id = self.nvim.current.window.number
+        # win_id = self.nvim.current.window.number
+        win_id = self.nvim.command_output('echo win_getid()').strip()
         win_ids = [timeline.win_id for timeline in self.timeline.values()]
         if win_id not in win_ids:
             self.echo('Move the cursor to the tweet you want to RT, Like or Reply')
@@ -51,7 +52,8 @@ class TweetNvim(object):
         self.nvim.command('setlocal nomodifiable')
 
     def selectedTimeline(self):
-        win_id = self.nvim.current.window.number
+        # win_id = self.nvim.current.window.number
+        win_id = self.nvim.command_output('echo win_getid()').strip()
         for name, timeline in self.timeline.items():
             if win_id == timeline.win_id:
                 return (name, timeline)
@@ -63,7 +65,8 @@ class TweetNvim(object):
             self.nvim.command('setlocal splitright')
             self.nvim.command('vnew')
             self.nvim.command('setlocal buftype=nofile bufhidden=hide nolist nonumber nomodifiable wrap')
-            self.timeline['_home'] = Timeline(self.nvim.current.window.number, home_timeline=True)
+            # self.timeline['_home'] = Timeline(self.nvim.current.window.number, home_timeline=True)
+            self.timeline['_home'] = Timeline(self.nvim.command_output('echo win_getid()').strip(), home_timeline=True)
 
         self.prependTweet(self.timeline['_home'].generate(self.nvim.current.window.width))
         self.echo('Open home timeline')
@@ -74,7 +77,8 @@ class TweetNvim(object):
             self.nvim.command('setlocal splitright')
             self.nvim.command('vnew')
             self.nvim.command('setlocal buftype=nofile bufhidden=hide nolist nonumber nomodifiable wrap')
-            self.timeline['_mentions'] = Timeline(self.nvim.current.window.number, mentions_timeline=True)
+            # self.timeline['_mentions'] = Timeline(self.nvim.current.window.number, mentions_timeline=True)
+            self.timeline['_mentions'] = Timeline(self.nvim.command_output('echo win_getid()').strip(), mentions_timeline=True)
 
         self.prependTweet(self.timeline['_mentions'].generate(self.nvim.current.window.width))
         self.echo('Open mentions timeline')
